@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS movimiento_detalle;
+DROP TABLE IF EXISTS movimientos;
+DROP TABLE IF EXISTS usuarios;
+DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS proveedores;
+DROP TABLE IF EXISTS insumos;
+DROP TABLE IF EXISTS categorias;

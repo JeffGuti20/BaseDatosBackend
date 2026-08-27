@@ -1,0 +1,6 @@
+Aqui van los handlers de cada tabla nuestro, los manejadores le dice el profe, que define los endpoints.
+tons hay que ir viendo el codigo del profe para poder hacerlo, los handlers.
+el tiene lo que es el:
+category.handlers.go
+post.handlers.go
+y el server.go que es donde creo que se definen los endpoints
