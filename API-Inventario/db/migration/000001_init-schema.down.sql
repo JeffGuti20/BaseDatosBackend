@@ -1,7 +1,14 @@
-DROP TABLE IF EXISTS movimiento_detalle;
-DROP TABLE IF EXISTS movimientos;
-DROP TABLE IF EXISTS usuarios;
+DROP TABLE IF EXISTS sale_details;
+DROP TABLE IF EXISTS sales;
+
+DROP TABLE IF EXISTS purchase_details;
+DROP TABLE IF EXISTS purchases;
+
+DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS roles;
-DROP TABLE IF EXISTS proveedores;
-DROP TABLE IF EXISTS insumos;
-DROP TABLE IF EXISTS categorias;
+
+DROP TABLE IF EXISTS clients;
+DROP TABLE IF EXISTS suppliers;
+
+DROP TABLE IF EXISTS supplies;
+DROP TABLE IF EXISTS categories;

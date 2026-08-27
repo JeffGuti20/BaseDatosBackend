@@ -1,7 +1,0 @@
-sqlc generate en la consola/terminal para generar automaticamente lo que viene siendo:
-models (structs de Go)
-queries functions
-DB context / Queries struct (cliente)
-
-cuando ya se tenga listo que lo viene siendo las queries y eso.
-preguntarme si no sabe como funcionan las queries, es algo con los comentarios pero me da pereza escribirlo.

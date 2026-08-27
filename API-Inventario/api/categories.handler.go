@@ -3,30 +3,31 @@ package api
 import (
 	"rest/dto"
 
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-// Request para categorias
+// Requests para categorias
 type createCategoryRequest struct {
-	Nombre string `json:"name" binding:"required"`
+	Name string `json:"name" binding:"required"`
 }
 
 type updateCategoryRequest struct {
-	CategoriaID int32  `json:"category_id" binding:"required"`
-	Nombre      string `json:"name" binding:"required"`
+	CategoryID int32  `json:"category_id" binding:"required"`
+	Name       string `json:"name" binding:"required"`
 }
 
 type deleteCategoryRequestJSON struct {
-	CategoriaID int32 `json:"category_id" binding:"required"`
+	CategoryID int32 `json:"category_id" binding:"required"`
 }
 
 type deleteCategoryRequestURI struct {
-	CategoriaID int32 `uri:"category_id" binding:"required"`
+	CategoryID int32 `uri:"category_id" binding:"required"`
 }
 
 type getCategoryByIDRequest struct {
-	CategoriaID int32 `uri:"category_id" binding:"required"`
+	CategoryID int32 `uri:"category_id" binding:"required"`
 }
 
 // createCategory es el handler para crear una nueva categoria.
@@ -38,7 +39,7 @@ func (server *Server) createCategory(c *gin.Context) {
 		return
 	}
 
-	result, err := server.dbtx.CreateCategory(c, req.Nombre)
+	result, err := server.dbtx.CreateCategory(c, req.Name)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -57,8 +58,8 @@ func (server *Server) updateCategory(c *gin.Context) {
 	}
 
 	arg := dto.UpdateCategoryParams{
-		CategoriaID: req.CategoriaID,
-		Nombre:      req.Nombre,
+		Name:       req.Name,
+		CategoryID: req.CategoryID,
 	}
 
 	result, err := server.dbtx.UpdateCategory(c, arg)
@@ -70,7 +71,7 @@ func (server *Server) updateCategory(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-// deleteCategory elimina una categoria por JSON.
+// deleteCategoryJSON elimina una categoria por JSON.
 func (server *Server) deleteCategoryJSON(c *gin.Context) {
 	var req deleteCategoryRequestJSON
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -78,7 +79,7 @@ func (server *Server) deleteCategoryJSON(c *gin.Context) {
 		return
 	}
 
-	result, err := server.dbtx.DeleteCategory(c, req.CategoriaID)
+	result, err := server.dbtx.DeleteCategory(c, req.CategoryID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -87,7 +88,7 @@ func (server *Server) deleteCategoryJSON(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-// deleteCategory elimina una categoria por URI.
+// deleteCategoryURI elimina una categoria por URI.
 func (server *Server) deleteCategoryURI(c *gin.Context) {
 	var req deleteCategoryRequestURI
 	if err := c.ShouldBindUri(&req); err != nil {
@@ -95,7 +96,7 @@ func (server *Server) deleteCategoryURI(c *gin.Context) {
 		return
 	}
 
-	result, err := server.dbtx.DeleteCategory(c, req.CategoriaID)
+	result, err := server.dbtx.DeleteCategory(c, req.CategoryID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -124,7 +125,7 @@ func (server *Server) getCategoryByID(c *gin.Context) {
 		return
 	}
 
-	category, err := server.dbtx.GetCategoryById(c, req.CategoriaID)
+	category, err := server.dbtx.GetCategoryById(c, req.CategoryID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, errorResponse(err))
 		return

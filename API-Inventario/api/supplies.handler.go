@@ -14,51 +14,54 @@ import (
 
 // Requests para insumos
 type createSupplyRequest struct {
-	Nombre      string `json:"name" binding:"required"`
-	Tipo        string `json:"type" binding:"required"`
-	Cantidad    int32  `json:"quantity" binding:"required"`
-	Image       string `json:"image" binding:"required"`
-	CategoriaID *int32 `json:"category_id" binding:"required"`
+	Name       string  `json:"name" binding:"required"`
+	Type       string  `json:"type" binding:"required"`
+	Stock      int32   `json:"stock" binding:"required"`
+	CategoryID int32   `json:"category_id" binding:"required"`
+	Price      float64 `json:"price" binding:"required"`
+	Image      string  `json:"image" binding:"required"`
 }
 
 type updateSupplyRequest struct {
-	InsumoID    int32  `json:"supply_id" binding:"required"`
-	Nombre      string `json:"name" binding:"required"`
-	Tipo        string `json:"type" binding:"required"`
-	Cantidad    int32  `json:"quantity" binding:"required"`
-	Image       string `json:"image" binding:"required"`
-	CategoriaID *int32 `json:"category_id" binding:"required"`
+	SupplyID   int32   `json:"supply_id" binding:"required"`
+	Name       string  `json:"name" binding:"required"`
+	Type       string  `json:"type" binding:"required"`
+	Stock      int32   `json:"stock" binding:"required"`
+	CategoryID int32   `json:"category_id" binding:"required"`
+	Price      float64 `json:"price" binding:"required"`
+	Image      string  `json:"image" binding:"required"`
 }
 
 type deleteSupplyRequestJSON struct {
-	InsumoID int32 `json:"supply_id" binding:"required"`
+	SupplyID int32 `json:"supply_id" binding:"required"`
 }
 
 type deleteSupplyRequestURI struct {
-	InsumoID int32 `uri:"supply_id" binding:"required"`
+	SupplyID int32 `uri:"supply_id" binding:"required"`
 }
 
 type getSupplyByIDRequest struct {
-	InsumoID int32 `uri:"supply_id" binding:"required"`
-}
-
-type supplyImageRequest struct {
-	Filename string `uri:"filename" binding:"required"`
+	SupplyID int32 `uri:"supply_id" binding:"required"`
 }
 
 // Responses para insumos
 type categoryResponse struct {
-	CategoriaID int32  `json:"category_id"`
-	Nombre      string `json:"name"`
+	CategoryID int32  `json:"category_id"`
+	Name       string `json:"name"`
 }
 
 type supplyResponse struct {
-	InsumoID int32            `json:"supply_id"`
-	Nombre   string           `json:"name"`
-	Tipo     dto.InsumosTipo  `json:"type"`
-	Cantidad int32            `json:"quantity"`
-	Image    string           `json:"image"`
+	SupplyID int32            `json:"supply_id"`
+	Name     string           `json:"name"`
+	Type     dto.SuppliesType `json:"type"`
+	Stock    int32            `json:"stock"`
+	Price    float64          `json:"price"`
 	Category categoryResponse `json:"category"`
+	Image    string           `json:"image"`
+}
+
+type supplyImageRequest struct {
+	Filename string `uri:"filename" binding:"required"`
 }
 
 // createSupply es el handler para crear un nuevo movimiento.
@@ -70,11 +73,12 @@ func (server *Server) createSupply(ctx *gin.Context) {
 	}
 
 	arg := dto.CreateSupplyParams{
-		Nombre:      req.Nombre,
-		Tipo:        dto.InsumosTipo(req.Tipo),
-		Cantidad:    req.Cantidad,
-		CategoriaID: req.CategoriaID,
-		Image:       req.Image,
+		Name:       req.Name,
+		Type:       dto.SuppliesType(req.Type),
+		Stock:      req.Stock,
+		CategoryID: req.CategoryID,
+		Price:      req.Price,
+		Image:      req.Image,
 	}
 
 	result, err := server.dbtx.CreateSupply(ctx, arg)
@@ -95,12 +99,13 @@ func (server *Server) updateSupply(ctx *gin.Context) {
 	}
 
 	arg := dto.UpdateSupplyParams{
-		InsumoID:    req.InsumoID,
-		Nombre:      req.Nombre,
-		Tipo:        dto.InsumosTipo(req.Tipo),
-		Cantidad:    req.Cantidad,
-		Image:       req.Image,
-		CategoriaID: req.CategoriaID,
+		Name:       req.Name,
+		Type:       dto.SuppliesType(req.Type),
+		Stock:      req.Stock,
+		CategoryID: req.CategoryID,
+		Price:      req.Price,
+		SupplyID:   req.SupplyID,
+		Image:      req.Image,
 	}
 
 	result, err := server.dbtx.UpdateSupply(ctx, arg)
@@ -120,7 +125,7 @@ func (server *Server) deleteSupplyJSON(ctx *gin.Context) {
 		return
 	}
 
-	result, err := server.dbtx.DeleteSupply(ctx, req.InsumoID)
+	result, err := server.dbtx.DeleteSupply(ctx, req.SupplyID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -137,7 +142,7 @@ func (server *Server) deleteSupplyURI(ctx *gin.Context) {
 		return
 	}
 
-	result, err := server.dbtx.DeleteSupply(ctx, req.InsumoID)
+	result, err := server.dbtx.DeleteSupply(ctx, req.SupplyID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -157,21 +162,19 @@ func (server *Server) getAllSupplies(ctx *gin.Context) {
 	response := []supplyResponse{}
 	for _, supply := range supplies {
 
-		var category categoryResponse
-		if supply.CategoriaID != nil {
-			category = categoryResponse{
-				CategoriaID: *supply.CategoriaID,
-				Nombre:      supply.CategoriaNombre,
-			}
+		category := categoryResponse{
+			CategoryID: supply.CategoryID,
+			Name:       supply.CategoryName.String,
 		}
 
 		response = append(response, supplyResponse{
-			InsumoID: supply.InsumoID,
-			Nombre:   supply.Nombre,
-			Tipo:     supply.Tipo,
-			Cantidad: supply.Cantidad,
-			Image:    supply.Image,
+			SupplyID: supply.SupplyID,
+			Name:     supply.Name,
+			Type:     supply.Type,
+			Stock:    supply.Stock,
+			Price:    supply.Price,
 			Category: category,
+			Image: supply.Image,
 		})
 	}
 
@@ -186,26 +189,23 @@ func (server *Server) getSupplyByID(ctx *gin.Context) {
 		return
 	}
 
-	supply, err := server.dbtx.GetSupplyById(ctx, req.InsumoID)
+	supply, err := server.dbtx.GetSupplyById(ctx, req.SupplyID)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, errorResponse(err))
 		return
 	}
 
-	var category categoryResponse
-	if supply.CategoriaID != nil {
-		category = categoryResponse{
-			CategoriaID: *supply.CategoriaID,
-			Nombre:      supply.CategoriaNombre,
-		}
+	category := categoryResponse{
+		CategoryID: supply.CategoryID,
+		Name:       supply.CategoryName.String,
 	}
 
 	response := supplyResponse{
-		InsumoID: supply.InsumoID,
-		Nombre:   supply.Nombre,
-		Tipo:     supply.Tipo,
-		Cantidad: supply.Cantidad,
-		Image:    supply.Image,
+		SupplyID: supply.SupplyID,
+		Name:     supply.Name,
+		Type:     supply.Type,
+		Stock:    supply.Stock,
+		Price:    supply.Price,
 		Category: category,
 	}
 
@@ -220,19 +220,120 @@ func (server *Server) getSuppliesByCategory(ctx *gin.Context) {
 		return
 	}
 
-	supplies, err := server.dbtx.GetSupplyById(ctx, req.InsumoID)
+	supplies, err := server.dbtx.GetSupplyById(ctx, req.SupplyID)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, errorResponse(err))
 		return
 	}
 
 	response := categoryResponse{
-		CategoriaID: *supplies.CategoriaID,
-		Nombre:      supplies.CategoriaNombre,
+		CategoryID: supplies.CategoryID,
+		Name:       supplies.CategoryName.String,
 	}
 
 	ctx.JSON(http.StatusOK, response)
 }
+
+/*
+func (server *Server) uploadSupplyImg(ctx *gin.Context) {
+
+	fileHeader, err := ctx.FormFile("file0")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	defer file.Close()
+
+	wd, _ := os.Getwd()
+	fmt.Println("Working directory:", wd)
+	upDir := filepath.Join(wd, "utils", "data", "supplies")
+
+	err = os.MkdirAll(upDir, os.ModePerm)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	filename := uuid.New().String() + "_" + filepath.Base(fileHeader.Filename)
+
+	destinationFile, err := os.Create(filepath.Join(upDir, filename))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	defer destinationFile.Close()
+
+	_, err = io.Copy(destinationFile, file)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"filename": filename,
+		"message":  "Imagen cargada exitosamente",
+	})
+}
+
+func (server *Server) downloadSupplyImg(ctx *gin.Context) {
+
+	var req supplyImageRequest
+
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	wd, _ := os.Getwd()
+
+	fileUrl := filepath.Join(
+		wd,
+		"utils",
+		"data",
+		"supplies",
+		req.Filename,
+	)
+
+	ctx.File(fileUrl)
+}
+
+func (server *Server) deleteSupplyImg(ctx *gin.Context) {
+
+	var req supplyImageRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	wd, _ := os.Getwd()
+
+	filePath := filepath.Join(
+		wd,
+		"utils",
+		"data",
+		"supplies",
+		req.Filename,
+	)
+
+	err := os.Remove(filePath)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "No se pudo eliminar la imagen",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Imagen eliminada correctamente",
+	})
+}
+*/
 
 func (server *Server) uploadSupplyImg(ctx *gin.Context) {
 

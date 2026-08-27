@@ -5,10 +5,10 @@ SELECT * FROM roles;
 SELECT * FROM roles WHERE role_id=?;
 
 -- name: CreateRole :execresult
-INSERT INTO roles (nombre) VALUES (?);
+INSERT INTO roles (name) VALUES (?);
 
 -- name: UpdateRole :execresult
-UPDATE roles SET nombre=? WHERE role_id=?;
+UPDATE roles SET name=? WHERE role_id=?;
 
 -- name: DeleteRole :execresult
 DELETE FROM roles WHERE role_id=?;

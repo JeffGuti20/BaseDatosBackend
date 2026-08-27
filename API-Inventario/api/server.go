@@ -56,8 +56,6 @@ func NewServer(dbtx *dto.Queries, conn *sql.DB, secret string) (*Server, error) 
 	//RUTAS SIN MIDDLEWARE
 	router.POST("api/v1/login", server.login)
 	router.POST("api/v1/register", server.createUser)
-	router.POST("api/v1/users/upload_image", server.uploadUserImg)
-	
 
 	//RUTAS CON MIDDLEWARE
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenBuilder))
@@ -72,13 +70,22 @@ func NewServer(dbtx *dto.Queries, conn *sql.DB, secret string) (*Server, error) 
 	authRoutes.DELETE("api/v1/categories/:category_id", server.deleteCategoryURI)
 
 	//ROUTES SUPPLIERS
-	authRoutes.GET("api/v1/suppliers", server.getAllProveedores)
-	authRoutes.GET("api/v1/suppliers/:supplier_id", server.getProveedoresByID)
+	authRoutes.GET("api/v1/suppliers", server.getAllSuppliers)
+	authRoutes.GET("api/v1/suppliers/:supplier_id", server.getSuppliersByID)
 
-	authRoutes.POST("api/v1/suppliers", server.createProveedor)
-	authRoutes.PUT("api/v1/suppliers", server.updateProveedor)
-	authRoutes.DELETE("api/v1/suppliers", server.deleteProveedorJSON)
-	authRoutes.DELETE("api/v1/suppliers/:supplier_id", server.deleteProveedorURI)
+	authRoutes.POST("api/v1/suppliers", server.createSupplier)
+	authRoutes.PUT("api/v1/suppliers", server.updateSupplier)
+	authRoutes.DELETE("api/v1/suppliers", server.deleteSupplierJSON)
+	authRoutes.DELETE("api/v1/suppliers/:supplier_id", server.deleteSupplierURI)
+
+	//ROUTES CLIENTS
+	authRoutes.GET("api/v1/clients", server.getAllClients)
+	authRoutes.GET("api/v1/clients/:client_id", server.getClientsByID)
+
+	authRoutes.POST("api/v1/clients", server.createClient)
+	authRoutes.PUT("api/v1/clients", server.updateClient)
+	authRoutes.DELETE("api/v1/clients", server.deleteClientJSON)
+	authRoutes.DELETE("api/v1/clients/:client_id", server.deleteClientURI)
 
 	// ROUTES SUPPLIES
 	authRoutes.GET("api/v1/supplies", server.getAllSupplies)
@@ -103,32 +110,37 @@ func NewServer(dbtx *dto.Queries, conn *sql.DB, secret string) (*Server, error) 
 	authRoutes.DELETE("api/v1/roles", server.deleteRoleJSON)
 	authRoutes.DELETE("api/v1/roles/:role_id", server.deleteRoleURI)
 
-	//ROUTES MOVEMENTS
-	authRoutes.GET("api/v1/movements", server.getAllMovement)
-	authRoutes.GET("api/v1/movements/:movement_id", server.getMovementByID)
-	authRoutes.GET("api/v1/movements/:movement_id/supplies", server.getMovementsBySupply)
-	authRoutes.GET("api/v1/movements/:movement_id/supplier", server.getMovementsBySupplier)
-	authRoutes.GET("api/v1/movements/:movement_id/user", server.getMovementsByUser)
+	//ROUTES PURCHASES
+	authRoutes.GET("api/v1/purchases", server.getAllPurchase)
 
-	authRoutes.POST("api/v1/movements", server.createMovement)
-	authRoutes.PUT("api/v1/movements", server.updateMovement)
-	authRoutes.DELETE("api/v1/movements", server.deleteMovementJSON)
-	authRoutes.DELETE("api/v1/movements/:movement_id", server.deleteMovementURI)
+	authRoutes.POST("api/v1/purchases", server.createPurchases)
+	authRoutes.PUT("api/v1/purchases", server.updatePurchases)
+	authRoutes.DELETE("api/v1/purchases", server.deletePurchaseJSON)
+	authRoutes.DELETE("api/v1/purchases/:purchase_id", server.deletePurchaseURI)
 
+	/*
+		//ROUTES MOVEMENTS
+		authRoutes.GET("api/v1/movements", server.getAllMovement)
+		authRoutes.GET("api/v1/movements/:movement_id", server.getMovementByID)
+		authRoutes.GET("api/v1/movements/:movement_id/supplies", server.getMovementsBySupply)
+		authRoutes.GET("api/v1/movements/:movement_id/supplier", server.getMovementsBySupplier)
+		authRoutes.GET("api/v1/movements/:movement_id/user", server.getMovementsByUser)
+
+		authRoutes.POST("api/v1/movements", server.createMovement)
+		authRoutes.PUT("api/v1/movements", server.updateMovement)
+		authRoutes.DELETE("api/v1/movements", server.deleteMovementJSON)
+		authRoutes.DELETE("api/v1/movements/:movement_id", server.deleteMovementURI)
+
+	*/
 	//ROUTES USERS
 	authRoutes.GET("api/v1/users", server.getAllUsers)
-	authRoutes.GET("api/v1/users/id/:user_id", server.getUserRoleByID)
-	authRoutes.GET("api/v1/users/name/:name", server.getUserByName)
+	authRoutes.GET("api/v1/users/:user_id", server.getUserByID)
 
-	authRoutes.POST("api/v1/users", server.createUser)
-	authRoutes.PUT("api/v1/users", server.updateUser)
 	authRoutes.PUT("api/v1/users/:user_id/role/:role_id", server.updateUserRole)
+	authRoutes.PUT("api/v1/users", server.updateUser)
+	authRoutes.PUT("api/v1/profile", server.updateProfile)
 	authRoutes.DELETE("api/v1/users", server.deleteUserJSON)
 	authRoutes.DELETE("api/v1/users/:user_id", server.deleteUserURI)
-
-	authRoutes.GET("api/v1/users/download_image/:filename", server.downloadUserImg)
-	authRoutes.DELETE("api/v1/users/delete_image/:filename", server.deleteUserImg)
-	
 
 	server.router = router
 	return server, nil

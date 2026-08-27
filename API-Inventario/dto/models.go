@@ -10,136 +10,130 @@ import (
 	"fmt"
 )
 
-type InsumosTipo string
+type SuppliesType string
 
 const (
-	InsumosTipoFisico       InsumosTipo = "fisico"
-	InsumosTipoGastronomico InsumosTipo = "gastronomico"
+	SuppliesTypePhysical    SuppliesType = "physical"
+	SuppliesTypeGastronomic SuppliesType = "gastronomic"
 )
 
-func (e *InsumosTipo) Scan(src interface{}) error {
+func (e *SuppliesType) Scan(src interface{}) error {
 	switch s := src.(type) {
 	case []byte:
-		*e = InsumosTipo(s)
+		*e = SuppliesType(s)
 	case string:
-		*e = InsumosTipo(s)
+		*e = SuppliesType(s)
 	default:
-		return fmt.Errorf("unsupported scan type for InsumosTipo: %T", src)
+		return fmt.Errorf("unsupported scan type for SuppliesType: %T", src)
 	}
 	return nil
 }
 
-type NullInsumosTipo struct {
-	InsumosTipo InsumosTipo `json:"insumos_tipo"`
-	Valid       bool        `json:"valid"` // Valid is true if InsumosTipo is not NULL
+type NullSuppliesType struct {
+	SuppliesType SuppliesType `json:"supplies_type"`
+	Valid        bool         `json:"valid"` // Valid is true if SuppliesType is not NULL
 }
 
 // Scan implements the Scanner interface.
-func (ns *NullInsumosTipo) Scan(value interface{}) error {
+func (ns *NullSuppliesType) Scan(value interface{}) error {
 	if value == nil {
-		ns.InsumosTipo, ns.Valid = "", false
+		ns.SuppliesType, ns.Valid = "", false
 		return nil
 	}
 	ns.Valid = true
-	return ns.InsumosTipo.Scan(value)
+	return ns.SuppliesType.Scan(value)
 }
 
 // Value implements the driver Valuer interface.
-func (ns NullInsumosTipo) Value() (driver.Value, error) {
+func (ns NullSuppliesType) Value() (driver.Value, error) {
 	if !ns.Valid {
 		return nil, nil
 	}
-	return string(ns.InsumosTipo), nil
+	return string(ns.SuppliesType), nil
 }
 
-type MovimientosTipo string
-
-const (
-	MovimientosTipoEntrada MovimientosTipo = "entrada"
-	MovimientosTipoSalida  MovimientosTipo = "salida"
-)
-
-func (e *MovimientosTipo) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = MovimientosTipo(s)
-	case string:
-		*e = MovimientosTipo(s)
-	default:
-		return fmt.Errorf("unsupported scan type for MovimientosTipo: %T", src)
-	}
-	return nil
+type Category struct {
+	CategoryID int32  `json:"category_id"`
+	Name       string `json:"name"`
 }
 
-type NullMovimientosTipo struct {
-	MovimientosTipo MovimientosTipo `json:"movimientos_tipo"`
-	Valid           bool            `json:"valid"` // Valid is true if MovimientosTipo is not NULL
+type Client struct {
+	ClientID     int32  `json:"client_id"`
+	Name         string `json:"name"`
+	ContactPhone int32  `json:"contact_phone"`
+	ContactEmail string `json:"contact_email"`
 }
 
-// Scan implements the Scanner interface.
-func (ns *NullMovimientosTipo) Scan(value interface{}) error {
-	if value == nil {
-		ns.MovimientosTipo, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.MovimientosTipo.Scan(value)
+type Purchase struct {
+	PurchaseID int32          `json:"purchase_id"`
+	UserID     int32          `json:"user_id"`
+	SupplierID int32          `json:"supplier_id"`
+	Date       sql.NullTime   `json:"date"`
+	Subtotal   float64         `json:"subtotal"`
+	Discount   *float64 `json:"discount"`
+	Iva        float64         `json:"iva"`
+	Total      float64         `json:"total"`
 }
 
-// Value implements the driver Valuer interface.
-func (ns NullMovimientosTipo) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.MovimientosTipo), nil
-}
-
-type Categoria struct {
-	CategoriaID int32  `json:"category_id"`
-	Nombre      string `json:"name"`
-}
-
-type Insumo struct {
-	InsumoID    int32       `json:"supply_id"`
-	Nombre      string      `json:"name"`
-	Tipo        InsumosTipo `json:"type"`
-	Cantidad    int32       `json:"quantity"`
-	CategoriaID int32       `json:"category_id"`
-	Image       string      `json:"image"`
-}
-
-type Movimiento struct {
-	MovimientoID int32           `json:"movement_id"`
-	UsuarioID    int32           `json:"user_id"`
-	ProveedorID  *int32   `json:"supplier_id"`
-	Tipo         MovimientosTipo `json:"type"`
-	Fecha        sql.NullTime    `json:"date"`
-}
-
-type MovimientoDetalle struct {
-	DetalleID    int32 `json:"detail_id"`
-	MovimientoID int32 `json:"movement_id"`
-	InsumoID     int32 `json:"supply_id"`
-	Cantidad     int32 `json:"quantity"`
-}
-
-type Proveedore struct {
-	ProveedorID int32          `json:"supplier_id"`
-	Nombre      string         `json:"name"`
-	Telefono    *int32  `json:"phone"`
-	Email       *string `json:"email"`
+type PurchaseDetail struct {
+	DetailID   int32          `json:"detail_id"`
+	PurchaseID int32          `json:"purchase_id"`
+	SupplyID   int32          `json:"supply_id"`
+	Quantity   int32          `json:"quantity"`
+	UnitPrice  float64         `json:"unit_price"`
+	Discount   *float64 `json:"discount"`
+	Subtotal   float64         `json:"subtotal"`
 }
 
 type Role struct {
 	RoleID int32  `json:"role_id"`
-	Nombre string `json:"name"`
+	Name   string `json:"name"`
 }
 
-type Usuario struct {
-	UsuarioID  int32          `json:"user_id"`
-	RolID      int32          `json:"role_id"`
-	Nombre     string         `json:"name"`
-	Contraseña string         `json:"password"`
-	Email      *string `json:"email"`
-	Image      string         `json:"image"`
+type Sale struct {
+	SaleID   int32          `json:"sale_id"`
+	UserID   int32          `json:"user_id"`
+	ClientID int32          `json:"client_id"`
+	Date     sql.NullTime   `json:"date"`
+	Subtotal string         `json:"subtotal"`
+	Discount sql.NullString `json:"discount"`
+	Iva      string         `json:"iva"`
+	Total    string         `json:"total"`
+}
+
+type SaleDetail struct {
+	DetailID  int32          `json:"detail_id"`
+	SaleID    int32          `json:"sale_id"`
+	SupplyID  int32          `json:"supply_id"`
+	Quantity  int32          `json:"quantity"`
+	UnitPrice string         `json:"unit_price"`
+	Discount  sql.NullString `json:"discount"`
+	Subtotal  string         `json:"subtotal"`
+}
+
+type Supplier struct {
+	SupplierID   int32          `json:"supplier_id"`
+	CompanyName  string         `json:"company_name"`
+	CompanyPhone int32          `json:"company_phone"`
+	CompanyEmail string         `json:"company_email"`
+	ContactName  *string `json:"contact_name"`
+	ContactPhone *int32  `json:"contact_phone"`
+	ContactEmail *string `json:"contact_email"`
+}
+
+type Supply struct {
+	SupplyID   int32        `json:"supply_id"`
+	Name       string       `json:"name"`
+	Type       SuppliesType `json:"type"`
+	Stock      int32        `json:"stock"`
+	CategoryID int32        `json:"category_id"`
+	Price      float64       `json:"price"`
+}
+
+type User struct {
+	UserID   int32          `json:"user_id"`
+	RoleID   int32          `json:"role_id"`
+	Name     string         `json:"name"`
+	Password string         `json:"password"`
+	Email    *string `json:"email"`
 }

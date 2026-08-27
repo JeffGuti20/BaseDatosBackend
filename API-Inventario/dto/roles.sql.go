@@ -11,11 +11,11 @@ import (
 )
 
 const createRole = `-- name: CreateRole :execresult
-INSERT INTO roles (nombre) VALUES (?)
+INSERT INTO roles (name) VALUES (?)
 `
 
-func (q *Queries) CreateRole(ctx context.Context, nombre string) (sql.Result, error) {
-	return q.db.ExecContext(ctx, createRole, nombre)
+func (q *Queries) CreateRole(ctx context.Context, name string) (sql.Result, error) {
+	return q.db.ExecContext(ctx, createRole, name)
 }
 
 const deleteRole = `-- name: DeleteRole :execresult
@@ -27,7 +27,7 @@ func (q *Queries) DeleteRole(ctx context.Context, roleID int32) (sql.Result, err
 }
 
 const getAllRoles = `-- name: GetAllRoles :many
-SELECT role_id, nombre FROM roles
+SELECT role_id, name FROM roles
 `
 
 func (q *Queries) GetAllRoles(ctx context.Context) ([]Role, error) {
@@ -39,7 +39,7 @@ func (q *Queries) GetAllRoles(ctx context.Context) ([]Role, error) {
 	var items []Role
 	for rows.Next() {
 		var i Role
-		if err := rows.Scan(&i.RoleID, &i.Nombre); err != nil {
+		if err := rows.Scan(&i.RoleID, &i.Name); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -54,25 +54,25 @@ func (q *Queries) GetAllRoles(ctx context.Context) ([]Role, error) {
 }
 
 const getRoleById = `-- name: GetRoleById :one
-SELECT role_id, nombre FROM roles WHERE role_id=?
+SELECT role_id, name FROM roles WHERE role_id=?
 `
 
 func (q *Queries) GetRoleById(ctx context.Context, roleID int32) (Role, error) {
 	row := q.db.QueryRowContext(ctx, getRoleById, roleID)
 	var i Role
-	err := row.Scan(&i.RoleID, &i.Nombre)
+	err := row.Scan(&i.RoleID, &i.Name)
 	return i, err
 }
 
 const updateRole = `-- name: UpdateRole :execresult
-UPDATE roles SET nombre=? WHERE role_id=?
+UPDATE roles SET name=? WHERE role_id=?
 `
 
 type UpdateRoleParams struct {
-	Nombre string `json:"name"`
+	Name   string `json:"name"`
 	RoleID int32  `json:"role_id"`
 }
 
 func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, updateRole, arg.Nombre, arg.RoleID)
+	return q.db.ExecContext(ctx, updateRole, arg.Name, arg.RoleID)
 }

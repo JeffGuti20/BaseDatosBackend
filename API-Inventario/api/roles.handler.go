@@ -10,12 +10,12 @@ import (
 
 // Request para roles
 type createRoleRequest struct {
-	Nombre string `json:"name" binding:"required"`
+	Name string `json:"name" binding:"required"`
 }
 
 type updateRoleRequest struct {
 	RoleID int32  `json:"role_id" binding:"required"`
-	Nombre string `json:"name" binding:"required"`
+	Name   string `json:"name" binding:"required"`
 }
 
 type deleteRoleRequestJSON struct {
@@ -46,7 +46,7 @@ func (server *Server) createRole(ctx *gin.Context) {
 		return
 	}
 
-	result, err := server.dbtx.CreateRole(ctx, req.Nombre)
+	result, err := server.dbtx.CreateRole(ctx, req.Name)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -76,7 +76,7 @@ func (server *Server) updateRole(ctx *gin.Context) {
 
 	arg := dto.UpdateRoleParams{
 		RoleID: req.RoleID,
-		Nombre: req.Nombre,
+		Name:   req.Name,
 	}
 
 	_, err := server.dbtx.UpdateRole(ctx, arg)

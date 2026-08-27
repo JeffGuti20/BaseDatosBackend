@@ -24,7 +24,7 @@ services:
 
     environment:
       MYSQL_ROOT_PASSWORD: hola123
-      MYSQL_DATABASE: inventariodb
+      MYSQL_DATABASE: inventariodb2
 
     ports:
       - "3307:3306"

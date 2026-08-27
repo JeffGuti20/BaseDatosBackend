@@ -7,44 +7,52 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type createProveedorRequest struct {
-	Nombre   string  `json:"name" binding:"required"`
-	Telefono *int32  `json:"phone" `
-	Email    *string `json:"email" `
+type createSupplierRequest struct {
+	CompanyName  string  `json:"company_name" binding:"required"`
+	CompanyPhone int32   `json:"company_phone" binding:"required"`
+	CompanyEmail string  `json:"company_email" binding:"required"`
+	ContactName  *string `json:"contact_name" `
+	ContactPhone *int32  `json:"contact_phone"`
+	ContactEmail *string `json:"contact_email"`
 }
 
-type updateProveedorRequest struct {
-	ProveedorID int32   `json:"supplier_id" binding:"required"`
-	Nombre      string  `json:"name" binding:"required"`
-	Telefono    *int32  `json:"phone"`
-	Email       *string `json:"email"`
+type updateSupplierRequest struct {
+	CompanyName  string  `json:"company_name" binding:"required"`
+	CompanyPhone int32   `json:"company_phone" binding:"required"`
+	CompanyEmail string  `json:"company_email" binding:"required"`
+	ContactName  *string `json:"contact_name"`
+	ContactPhone *int32  `json:"contact_phone"`
+	ContactEmail *string `json:"contact_email"`
+	SupplierID   int32   `json:"supplier_id" binding:"required"`
 }
 
-type deleteProveedorRequestJSON struct {
-	ProveedorID int32 `json:"supplier_id" binding:"required"`
+type deleteSupplierRequestJSON struct {
+	SupplierID int32 `json:"supplier_id" binding:"required"`
 }
 
-type deleteProveedorRequestURI struct {
-	ProveedorID int32 `uri:"supplier_id" binding:"required"`
+type deleteSupplierRequestURI struct {
+	SupplierID int32 `uri:"supplier_id" binding:"required"`
 }
 
 // SELECT * FROM proveedores WHERE proveedor_id=?;
-type getProveedorRequest struct {
-	ProveedorID int32 `uri:"supplier_id" binding:"required"`
+type getSupplierRequest struct {
+	SupplierID int32 `uri:"supplier_id" binding:"required"`
 }
 
-
 // createProveedor es el handler para crear un nuevo proveedor o supplier.
-func (server *Server) createProveedor(ctx *gin.Context) {
-	var req createProveedorRequest
+func (server *Server) createSupplier(ctx *gin.Context) {
+	var req createSupplierRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 	args := dto.CreateSupplierParams{
-		Nombre:   req.Nombre,
-		Telefono: req.Telefono,
-		Email:    req.Email,
+		CompanyName:  req.CompanyName,
+		CompanyPhone: req.CompanyPhone,
+		CompanyEmail: req.CompanyEmail,
+		ContactName:  req.ContactName,
+		ContactPhone: req.ContactPhone,
+		ContactEmail: req.ContactEmail,
 	}
 	supplier, err := server.dbtx.CreateSupplier(ctx, args)
 	if err != nil {
@@ -56,8 +64,8 @@ func (server *Server) createProveedor(ctx *gin.Context) {
 }
 
 // updateProveedor es el handler para actualizar un proveedor o suppliers.
-func (server *Server) updateProveedor(ctx *gin.Context) {
-	var req updateProveedorRequest
+func (server *Server) updateSupplier(ctx *gin.Context) {
+	var req updateSupplierRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -65,10 +73,13 @@ func (server *Server) updateProveedor(ctx *gin.Context) {
 	}
 
 	args := dto.UpdateSupplierParams{
-		Nombre:      req.Nombre,
-		Telefono:    req.Telefono,
-		Email:       req.Email,
-		ProveedorID: req.ProveedorID,
+		CompanyName:  req.CompanyName,
+		CompanyPhone: req.CompanyPhone,
+		CompanyEmail: req.CompanyEmail,
+		ContactName:  req.ContactName,
+		ContactPhone: req.ContactPhone,
+		ContactEmail: req.ContactEmail,
+		SupplierID:   req.SupplierID,
 	}
 
 	_, err := server.dbtx.UpdateSupplier(ctx, args)
@@ -83,15 +94,15 @@ func (server *Server) updateProveedor(ctx *gin.Context) {
 }
 
 // deleteProveedor elimina un proveedor por JSON.
-func (server *Server) deleteProveedorJSON(ctx *gin.Context) {
-	var req deleteProveedorRequestJSON
+func (server *Server) deleteSupplierJSON(ctx *gin.Context) {
+	var req deleteSupplierRequestJSON
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	_, err := server.dbtx.DeleteSupplier(ctx, req.ProveedorID)
+	_, err := server.dbtx.DeleteSupplier(ctx, req.SupplierID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -103,15 +114,15 @@ func (server *Server) deleteProveedorJSON(ctx *gin.Context) {
 }
 
 // deleteProveedor elimina un proveedor por URI.
-func (server *Server) deleteProveedorURI(ctx *gin.Context) {
-	var req deleteProveedorRequestURI
+func (server *Server) deleteSupplierURI(ctx *gin.Context) {
+	var req deleteSupplierRequestURI
 
 	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	_, err := server.dbtx.DeleteSupplier(ctx, req.ProveedorID)
+	_, err := server.dbtx.DeleteSupplier(ctx, req.SupplierID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -123,7 +134,7 @@ func (server *Server) deleteProveedorURI(ctx *gin.Context) {
 }
 
 // getAllProveedores es el handler para obtener todos los proveedores o suppliers.
-func (server *Server) getAllProveedores(ctx *gin.Context) {
+func (server *Server) getAllSuppliers(ctx *gin.Context) {
 	suppliers, err := server.dbtx.GetAllSuppliers(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -133,15 +144,15 @@ func (server *Server) getAllProveedores(ctx *gin.Context) {
 }
 
 // getByIDProveedores es el handler para obtener un proveedor por su ID.
-func (server *Server) getProveedoresByID(ctx *gin.Context) {
-	var req getProveedorRequest
+func (server *Server) getSuppliersByID(ctx *gin.Context) {
+	var req getSupplierRequest
 
 	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	supplier, err := server.dbtx.GetSupplierById(ctx, req.ProveedorID)
+	supplier, err := server.dbtx.GetSupplierById(ctx, req.SupplierID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
