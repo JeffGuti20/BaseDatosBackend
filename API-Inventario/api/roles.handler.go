@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"rest/dto"
 	"rest/security"
 
 	"github.com/gin-gonic/gin"
@@ -46,13 +45,13 @@ func (server *Server) createRole(ctx *gin.Context) {
 		return
 	}
 
-	result, err := server.dbtx.CreateRole(ctx, req.Name)
+	result, err := server.roleRepository.CrearRol(ctx, req.Name)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	lastID, _ := result.LastInsertId()
+	lastID := result.RoleID
 	ctx.JSON(http.StatusOK, gin.H{
 		"generated_id": lastID,
 	})
@@ -74,12 +73,8 @@ func (server *Server) updateRole(ctx *gin.Context) {
 		return
 	}
 
-	arg := dto.UpdateRoleParams{
-		RoleID: req.RoleID,
-		Name:   req.Name,
-	}
 
-	_, err := server.dbtx.UpdateRole(ctx, arg)
+	_, err := server.roleRepository.ActualizarRol(ctx, req.RoleID, req.Name)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -106,7 +101,7 @@ func (server *Server) deleteRoleJSON(ctx *gin.Context) {
 		return
 	}
 
-	_, err := server.dbtx.DeleteRole(ctx, req.RoleID)
+	err := server.roleRepository.EliminarRol(ctx, req.RoleID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -133,7 +128,7 @@ func (server *Server) deleteRoleURI(ctx *gin.Context) {
 		return
 	}
 
-	_, err := server.dbtx.DeleteRole(ctx, req.RoleID)
+	err := server.roleRepository.EliminarRol(ctx, req.RoleID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -154,7 +149,7 @@ func (server *Server) getAllRoles(ctx *gin.Context) {
 		return
 	}
 
-	roles, err := server.dbtx.GetAllRoles(ctx)
+	roles, err := server.roleRepository.ObtenerRoles(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -179,7 +174,7 @@ func (server *Server) getRoleByID(ctx *gin.Context) {
 		return
 	}
 
-	role, err := server.dbtx.GetRoleById(ctx, req.RoleID)
+	role, err := server.roleRepository.ObtenerRol(ctx, req.RoleID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"rest/dto"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -50,14 +49,14 @@ type categoryResponse struct {
 	Name       string `json:"name"`
 }
 
-type supplyResponse struct {
+type SupplyResponse struct {
 	SupplyID int32            `json:"supply_id"`
 	Name     string           `json:"name"`
-	Type     dto.SuppliesType `json:"type"`
+	Type     string           `json:"type"`
 	Stock    int32            `json:"stock"`
-	Price    float64          `json:"price"`
-	Category categoryResponse `json:"category"`
 	Image    string           `json:"image"`
+	Category categoryResponse `json:"category"`
+	Price    float64          `json:"price"`
 }
 
 type supplyImageRequest struct {
@@ -72,22 +71,17 @@ func (server *Server) createSupply(ctx *gin.Context) {
 		return
 	}
 
-	arg := dto.CreateSupplyParams{
-		Name:       req.Name,
-		Type:       dto.SuppliesType(req.Type),
-		Stock:      req.Stock,
-		CategoryID: req.CategoryID,
-		Price:      req.Price,
-		Image:      req.Image,
-	}
-
-	result, err := server.dbtx.CreateSupply(ctx, arg)
+	result, err := server.supplyRepository.CrearInsumo(
+		ctx, req.Name, req.Type, req.Stock, req.CategoryID, req.Price, req.Image)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, result)
+	lastID := result.SupplyID
+	ctx.JSON(http.StatusOK, gin.H{
+		"generated_id": lastID,
+	})
 }
 
 // updateSupply es el handler para actualizar un movimiento.
@@ -98,17 +92,8 @@ func (server *Server) updateSupply(ctx *gin.Context) {
 		return
 	}
 
-	arg := dto.UpdateSupplyParams{
-		Name:       req.Name,
-		Type:       dto.SuppliesType(req.Type),
-		Stock:      req.Stock,
-		CategoryID: req.CategoryID,
-		Price:      req.Price,
-		SupplyID:   req.SupplyID,
-		Image:      req.Image,
-	}
-
-	result, err := server.dbtx.UpdateSupply(ctx, arg)
+	result, err := server.supplyRepository.ActualizarInsumo(
+		ctx, req.SupplyID, req.Name, req.Type, req.Stock, req.CategoryID, req.Price, req.Image)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -125,13 +110,15 @@ func (server *Server) deleteSupplyJSON(ctx *gin.Context) {
 		return
 	}
 
-	result, err := server.dbtx.DeleteSupply(ctx, req.SupplyID)
+	err := server.supplyRepository.EliminarInsumo(ctx, req.SupplyID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, result)
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Insumo eliminado correctamente",
+	})
 }
 
 // deleteSupply elimina un insumo por URI.
@@ -142,39 +129,40 @@ func (server *Server) deleteSupplyURI(ctx *gin.Context) {
 		return
 	}
 
-	result, err := server.dbtx.DeleteSupply(ctx, req.SupplyID)
+	err := server.supplyRepository.EliminarInsumo(ctx, req.SupplyID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, result)
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Insumo eliminado correctamente",
+	})
 }
 
 // getAllSupplies obtiene todos los insumos.
 func (server *Server) getAllSupplies(ctx *gin.Context) {
-	supplies, err := server.dbtx.GetAllSupplies(ctx)
+
+	supplies, err := server.supplyRepository.ObtenerInsumos(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	response := []supplyResponse{}
+	var response []SupplyResponse
+
 	for _, supply := range supplies {
-
-		category := categoryResponse{
-			CategoryID: supply.CategoryID,
-			Name:       supply.CategoryName.String,
-		}
-
-		response = append(response, supplyResponse{
+		response = append(response, SupplyResponse{
 			SupplyID: supply.SupplyID,
 			Name:     supply.Name,
 			Type:     supply.Type,
-			Stock:    supply.Stock,
+			Stock: supply.Stock,
+			Image:    supply.Image,
 			Price:    supply.Price,
-			Category: category,
-			Image: supply.Image,
+			Category: categoryResponse{
+				CategoryID: supply.CategoryID,
+				Name:       supply.CategoryName,
+			},
 		})
 	}
 
@@ -189,29 +177,16 @@ func (server *Server) getSupplyByID(ctx *gin.Context) {
 		return
 	}
 
-	supply, err := server.dbtx.GetSupplyById(ctx, req.SupplyID)
+	supply, err := server.supplyRepository.ObtenerInsumo(ctx, req.SupplyID)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, errorResponse(err))
 		return
 	}
 
-	category := categoryResponse{
-		CategoryID: supply.CategoryID,
-		Name:       supply.CategoryName.String,
-	}
-
-	response := supplyResponse{
-		SupplyID: supply.SupplyID,
-		Name:     supply.Name,
-		Type:     supply.Type,
-		Stock:    supply.Stock,
-		Price:    supply.Price,
-		Category: category,
-	}
-
-	ctx.JSON(http.StatusOK, response)
+	ctx.JSON(http.StatusOK, supply)
 }
 
+/*
 // getSuppliesByCategory obtiene los insumos por su categoría.
 func (server *Server) getSuppliesByCategory(ctx *gin.Context) {
 	var req getSupplyByIDRequest
@@ -233,6 +208,7 @@ func (server *Server) getSuppliesByCategory(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, response)
 }
+*/
 
 /*
 func (server *Server) uploadSupplyImg(ctx *gin.Context) {
@@ -397,23 +373,23 @@ func (server *Server) downloadSupplyImg(ctx *gin.Context) {
 
 func (server *Server) deleteSupplyImg(ctx *gin.Context) {
 
-    var req supplyImageRequest
-    if err := ctx.ShouldBindUri(&req); err != nil {
-        ctx.JSON(http.StatusBadRequest, errorResponse(err))
-        return
-    }
+	var req supplyImageRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
 
-    filePath := filepath.Join("/data/supplies", req.Filename)
+	filePath := filepath.Join("/data/supplies", req.Filename)
 
-    err := os.Remove(filePath)
-    if err != nil {
-        ctx.JSON(http.StatusInternalServerError, gin.H{
-            "error": "No se pudo eliminar la imagen",
-        })
-        return
-    }
+	err := os.Remove(filePath)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "No se pudo eliminar la imagen",
+		})
+		return
+	}
 
-    ctx.JSON(http.StatusOK, gin.H{
-        "message": "Imagen eliminada correctamente",
-    })
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Imagen eliminada correctamente",
+	})
 }
