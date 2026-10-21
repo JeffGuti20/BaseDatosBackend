@@ -28,6 +28,7 @@ type Server struct {
 	roleRepository     *repository.RoleRepository
 	categoryRepository *repository.CategoryRepository
 	supplyRepository   *repository.SupplyRepository
+	supplierRepository *repository.SupplierRepository
 	router             *gin.Engine
 	tokenBuilder       security.Builder
 }
@@ -37,6 +38,7 @@ func NewServer(
 	roleRepository *repository.RoleRepository,
 	categoryRepository *repository.CategoryRepository,
 	supplyRepository *repository.SupplyRepository,
+	supplierRepository *repository.SupplierRepository,
 	conn *sql.DB, secret string) (*Server, error) {
 
 	builder, err := security.NewPasetoBuilder(secret)
@@ -50,6 +52,7 @@ func NewServer(
 		roleRepository:     roleRepository,
 		categoryRepository: categoryRepository,
 		supplyRepository:   supplyRepository,
+		supplierRepository: supplierRepository,
 		tokenBuilder:       builder,
 	}
 	router := gin.Default()
@@ -100,6 +103,15 @@ func NewServer(
 	authRoutes.POST("api/v1/supplies/upload_image", server.uploadSupplyImg)
 	authRoutes.GET("api/v1/supplies/download_image/:filename", server.downloadSupplyImg)
 	authRoutes.DELETE("api/v1/supplies/delete_image/:filename", server.deleteSupplyImg)
+
+	//ROUTES SUPPLIERS
+	authRoutes.GET("api/v1/suppliers", server.getAllSuppliers)
+	authRoutes.GET("api/v1/suppliers/:supplier_id", server.getSuppliersByID)
+
+	authRoutes.POST("api/v1/suppliers", server.createSupplier)
+	authRoutes.PUT("api/v1/suppliers", server.updateSupplier)
+	authRoutes.DELETE("api/v1/suppliers", server.deleteSupplierJSON)
+	authRoutes.DELETE("api/v1/suppliers/:supplier_id", server.deleteSupplierURI)
 
 	//ROUTES USERS
 

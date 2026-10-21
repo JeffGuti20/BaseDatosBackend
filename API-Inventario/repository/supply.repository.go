@@ -2,16 +2,15 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 
 	"rest/models"
 )
 
 type SupplyRepository struct {
-	db *sql.DB
+	db DBTX
 }
 
-func NewSupplyRepository(db *sql.DB) *SupplyRepository {
+func NewSupplyRepository(db DBTX) *SupplyRepository {
 	return &SupplyRepository{
 		db: db,
 	}
@@ -65,7 +64,9 @@ func (r *SupplyRepository) CrearInsumo(
 }
 
 // ObtenerInsumos ejecuta el procedimiento almacenado paObtenerInsumos.
-func (r *SupplyRepository) ObtenerInsumos(ctx context.Context) ([]models.Supply, error) {
+func (r *SupplyRepository) ObtenerInsumos(
+	ctx context.Context,
+) ([]models.Supply, error) {
 
 	stmt, err := r.db.PrepareContext(
 		ctx,
@@ -87,7 +88,6 @@ func (r *SupplyRepository) ObtenerInsumos(ctx context.Context) ([]models.Supply,
 	for rows.Next() {
 
 		var insumo models.Supply
-	
 
 		err := rows.Scan(
 			&insumo.SupplyID,
@@ -199,6 +199,8 @@ func (r *SupplyRepository) ActualizarInsumo(
 	if err != nil {
 		return nil, err
 	}
+
+	insumo.CategoryName = categoryName
 
 	return &insumo, nil
 }
